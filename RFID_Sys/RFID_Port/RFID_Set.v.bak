@@ -1,0 +1,8 @@
+//created by zhouhang 20170824
+//RFID相关的寄存器设置
+//v1.0.0824
+
+module RFID_Set();
+
+
+endmodule

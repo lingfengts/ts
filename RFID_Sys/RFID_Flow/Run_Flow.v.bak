@@ -1,0 +1,8 @@
+//created by zhouhang 20170801
+//RFID运行流程控制，控制调频和天线切换，控制盘点次数
+//v1.0.0801
+
+module Run_Flow();
+
+
+endmodule

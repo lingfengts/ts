@@ -1,0 +1,144 @@
+#created by zhouhang 20170926
+#版本更新使用的TCL Proc，需要和版本verilog文件配合使用
+# version_update_major:主版本号自增1
+# version_update_minor:子版本号自增1
+# version_update_timestamp:添加时间戳
+# version_check:查询当前版本号
+# V1.0.0926
+
+proc version_update_major {} {
+	#打开文件
+	set filename "System_Version.v"
+	
+	if {[catch {open $filename r+} fp]} {
+		return  -code error $fp
+	}
+	
+	while {-1 != [gets $fp current_line] } {
+		if {[regexp {^assign value_major = 4'h([[:xdigit:]]+);\t+//version:major$} $current_line -> version_major]} {		
+			#计算偏移地址，行长度+2回车字符
+			set offset [string bytelength 2+$current_line]
+			#16进制 -> 10进制
+			puts "last major version is \[0x$version_major\]"
+			scan $version_major "%x" dec_value
+			#版本号自增1
+			incr dec_value
+			#版本号溢出判断
+			if {$dec_value > 15} {
+				close $fp
+				return -code error "@error!! major version number is out of range!!"
+			}
+			#10进制 —> 16进制
+			set new_version_major [format "%X" $dec_value]
+			#替换版本号
+			regsub 4'h$version_major $current_line 4'h$new_version_major current_line
+			#写入地址偏移
+			seek $fp -$offset current
+			#写入修改后数据
+			puts $fp $current_line
+			puts "update major version \[0x$new_version_major\] successful"
+		}
+	}
+	close $fp
+}
+
+proc version_update_minor {} {
+	#打开文件
+	set filename "System_Version.v"
+	
+	if {[catch {open $filename r+} fp]} {
+		return  -code error $fp
+	}
+	
+	while {-1 != [gets $fp current_line] } {
+		if {[regexp {^assign value_minor = 4'h([[:xdigit:]]+);\t+//version:minor$} $current_line -> version_minor]} {		
+			#计算偏移地址，行长度+2回车字符
+			set offset [string bytelength 2+$current_line]
+			#16进制 -> 10进制
+			puts "last minor version is \[0x$version_minor\]"
+			scan $version_minor "%x" dec_value
+			#版本号自增1
+			incr dec_value
+			#版本号溢出判断
+			if {$dec_value > 15} {
+				close $fp
+				return -code error "@error!! minor version number is out of range!!"
+			}
+			#10进制 —> 16进制
+			set new_version_minor [format "%X" $dec_value]
+			#替换版本号
+			regsub 4'h$version_minor $current_line 4'h$new_version_minor current_line
+			#写入地址偏移
+			seek $fp -$offset current
+			#写入修改后数据
+			puts $fp $current_line
+			puts "update minor version \[0x$new_version_minor\] successful"
+		}
+	}
+	close $fp
+}
+
+proc version_update_timestamp {} {
+	#打开文件
+	set filename "System_Version.v"
+	
+	if {[catch {open $filename r+} fp]} {
+		return  -code error $fp
+	}
+
+	while {-1 != [gets $fp current_line] } {
+		if {[regexp {^assign value_year = 8'd([[:xdigit:]]+);\t+//version:year$} $current_line]} {		
+			#获取当前时间戳
+			set current_time [clock format [clock seconds] -format {%y %m %d %H %M}]
+			puts $current_time
+			scan $current_time "%d %d %d %d %d" year month day hour min
+			#统一格式
+			set year [format "%02d" $year]
+			set month [format "%02d" $month]
+			set day [format "%02d" $day]
+			set hour [format "%02d" $hour]
+			set min [format "%02d" $min]
+			
+			puts $year
+			puts $month
+			puts $day
+			puts $hour
+			puts $min
+			#计算偏移地址，行长度+2回车字符
+			set offset [string bytelength 2+$current_line]
+			#定位写入地址
+			seek $fp -$offset current
+			#写入时间戳
+			puts $fp "assign value_year = 8'd$year;		//version:year"
+			puts $fp "assign value_month = 8'd$month;		//version:month"
+			puts $fp "assign value_day = 8'd$day;		//version:day"
+			puts $fp "assign value_hour = 8'd$hour;		//version:hour"
+			puts -nonewline $fp "assign value_min = 8'd$min;		//version:minute"
+			puts "update timestamp successful \[$year-$month-$day $hour:$min\]"
+		}
+	}
+	close $fp	
+}
+
+proc  version_check {} {
+	set filename "System_Version.v"
+	
+	if {[catch {open $filename r} fp]} {
+		return  -code error $fp
+	}
+	
+	while {-1 != [gets $fp current_line] } {
+		regexp {^assign value_major = 4'h([[:xdigit:]]+);\t+//version:major$} $current_line -> version_major
+		regexp {^assign value_minor = 4'h([[:xdigit:]]+);\t+//version:minor$} $current_line -> version_minor
+		regexp {^assign value_year = 8'd([[:xdigit:]]+);\t+//version:year$} $current_line -> version_year
+		regexp {^assign value_month = 8'd([[:xdigit:]]+);\t+//version:month$} $current_line -> version_month
+		regexp {^assign value_day = 8'd([[:xdigit:]]+);\t+//version:day$} $current_line -> version_day
+		regexp {^assign value_hour = 8'd([[:xdigit:]]+);\t+//version:hour$} $current_line -> version_hour
+		regexp {^assign value_min = 8'd([[:xdigit:]]+);\t+//version:minute$} $current_line -> version_min
+	}
+	
+	puts "current version is: \[$version_major.$version_minor.$version_year.$version_month.$version_day.$version_hour.$version_min\]"
+	
+	close $fp
+}
+

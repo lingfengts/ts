@@ -1,0 +1,9 @@
+//created by zhouhang 20170824
+//RF控制模块，包括9963、9010、天线切换、功率控制和功率法检测
+//v1.0.0824
+
+module RF_Contrller();
+
+
+
+endmodule
